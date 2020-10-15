@@ -157,10 +157,10 @@ private func DeployModuleMaps() throws {
   let tasks: [(source: String, destination: String)] = [
     (source: Path.join(SDKROOT, "usr", "share", "ucrt.modulemap"),
      destination: Path.join(WindowsSDKDir, "Include", WindowsSDKVersion,
-                            "ucrt", "module.modulemap.1")),
+                            "ucrt", "module.modulemap")),
     (source: Path.join(SDKROOT, "usr", "share", "winsdk.modulemap"),
      destination: Path.join(WindowsSDKDir, "Include", WindowsSDKVersion,
-                            "um", "module.modulemap.1"))
+                            "um", "module.modulemap"))
   ]
 
   for task in tasks {
