@@ -4,6 +4,8 @@ A helper utility to manage the development environment on Windows.
 
 Using Swift on Windows requires some additional environment variables and files to be deployed.  This tool helps automate those tasks to make it easier to develop using Swift on Windows.  With this tool, you no longer need worry about getting the correct shell or environment variable
 
+Using this tool to deploy the module maps is far more convenience since it uses the Windows Shell infrastructure to copy the files into the correct location.  It uses the standard Windows security mechanisms for requesting elevated privileges via UAC and ensuring that file replacement is done correctly.
+
 ### Table of Contents
 
 - [swift devenv](#swift-devenv)
@@ -14,9 +16,14 @@ Using Swift on Windows requires some additional environment variables and files 
 
 ### Using swift-devenv
 
+One time setup:
 ```cmd
 :: Copy the module maps for using the Windows SDK and UCRT, in case they haven't been deployed yet.
 > swift devenv --deploy
+```
+
+Normal usage:
+```cmd
 :: Setup the environment variables
 > swift devenv
 :: Build the project
