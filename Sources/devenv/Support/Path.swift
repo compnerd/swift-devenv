@@ -28,4 +28,19 @@ internal enum Path {
 
     return result
   }
+
+  static func dirname(_ path: String) throws -> String {
+    var buffer: [WCHAR] = path.wide
+    let hr: HRESULT = buffer.withUnsafeMutableBufferPointer {
+      PathCchRemoveFileSpec($0.baseAddress, $0.count)
+    }
+    guard hr == S_OK else { throw Error(hr: hr) }
+
+    return String(from: buffer)
+  }
+
+  static func basename(_ path: String) -> String {
+    var buffer: [WCHAR] = path.wide
+    return String(decodingCString: PathFindFileNameW(buffer), as: UTF16.self)
+  }
 }
