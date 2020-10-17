@@ -16,7 +16,7 @@ private func WIN32_FROM_HRESULT(_ hr: HRESULT) -> WORD? {
 }
 
 fileprivate var szWindowsKitsInstalledRootsKey: String {
-  "SOFTWARE\\Microsoft\\WIndows Kits\\Installed Roots"
+  "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots"
 }
 
 fileprivate var szKitsRoot10: String {
