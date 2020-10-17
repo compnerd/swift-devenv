@@ -17,3 +17,13 @@ internal var KEY_READ: DWORD {
 internal func MAKELANGID(_ p: WORD, _ s: WORD) -> DWORD {
   return DWORD((s << 10) | p)
 }
+
+@_transparent
+internal func HRESULT_FACILITY(_ hr: HRESULT) -> WORD {
+  return WORD((Int32(hr) >> 16) & 0x1fff)
+}
+
+@_transparent
+internal func HRESULT_CODE(_ hr: HRESULT) -> WORD {
+  return WORD(Int32(hr) & 0xffff)
+}

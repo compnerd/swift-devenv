@@ -6,7 +6,14 @@
  **/
 
 import WinSDK
+import SwiftCOM
 import ArgumentParser
+
+private func WIN32_FROM_HRESULT(_ hr: HRESULT) -> WORD? {
+  // guard DWORD(hr) & DWORD(0x80000000) == DWORD(0x80000000) else { return nil }
+  guard HRESULT_FACILITY(hr) == FACILITY_WIN32 else { return nil }
+  return HRESULT_CODE(hr)
+}
 
 fileprivate var szWindowsKitsInstalledRootsKey: String {
   "SOFTWARE\\Microsoft\\WIndows Kits\\Installed Roots"
@@ -144,6 +151,22 @@ private func GetSDKROOT() throws -> String {
   return String(from: buffer)
 }
 
+private class DeployModuleMapProgressPrinter: SwiftCOM.IFileOperationProgressSink {
+  override public func PostCopyItem(_ dwFlags: DWORD,
+                                    _ psiItem: SwiftCOM.IShellItem,
+                                    _ psiDestinationFolder: SwiftCOM.IShellItem,
+                                    _ pszNewName: String, _ hrCopy: HRESULT,
+                                    _ psiNewlyCreated: SwiftCOM.IShellItem)
+      -> HRESULT {
+    guard hrCopy == S_OK else { return S_OK }
+    if let source = try? psiItem.GetDisplayName(SIGDN_FILESYSPATH),
+        let destination = try? psiNewlyCreated.GetDisplayName(SIGDN_FILESYSPATH) {
+      print("Deployed \(source) to \(destination)")
+    }
+    return S_OK
+  }
+}
+
 /// Inject the module maps to the appropriate locations into the Windows SDK and
 /// ucrt installations.
 private func DeployModuleMaps() throws {
@@ -154,7 +177,7 @@ private func DeployModuleMaps() throws {
     throw SDKNotFoundError()
   }
 
-  let tasks: [(source: String, destination: String)] = [
+  let items: [(source: String, destination: String)] = [
     (source: Path.join(SDKROOT, "usr", "share", "ucrt.modulemap"),
      destination: Path.join(WindowsSDKDir, "Include", WindowsSDKVersion,
                             "ucrt", "module.modulemap")),
@@ -163,23 +186,57 @@ private func DeployModuleMaps() throws {
                             "um", "module.modulemap"))
   ]
 
-  for task in tasks {
-    try (task.source + "\0\0").withCString(encodedAs: UTF16.self) { wszSource in
-      try (task.destination + "\0\0").withCString(encodedAs: UTF16.self) { wszDestination in
-        var shfopOperation: SHFILEOPSTRUCTW =
-            SHFILEOPSTRUCTW(hwnd: nil,
-                            wFunc: UINT(FO_COPY),
-                            pFrom: wszSource,
-                            pTo: wszDestination,
-                            fFlags: FILEOP_FLAGS(FOF_WANTNUKEWARNING),
-                            fAnyOperationsAborted: false,
-                            hNameMappings: nil,
-                            lpszProgressTitle: nil)
-        let iResult: CInt =  SHFileOperationW(&shfopOperation)
-        guard iResult == 0 else { throw Error(win32: GetLastError()) }
+  // NOTE: we must use APARTMENTTHREADED as `IFileOperation` only supports the
+  // apartment threading model.  Disable OLE DDE while at it.
+  let dwCoInit: DWORD = DWORD(COINIT_APARTMENTTHREADED.rawValue)
+                      | DWORD(COINIT_DISABLE_OLE1DDE.rawValue)
+
+  let hr: HRESULT = CoInitializeEx(nil, dwCoInit)
+  guard hr == S_OK else { throw COMError(hr: hr) }
+  defer { CoUninitialize() }
+
+  let pFOp: SwiftCOM.IFileOperation =
+      try IFileOperation.CreateInstance(class: CLSID_FileOperation)
+  defer { _ = try? pFOp.Release() }
+
+  let dwOperationFlags: DWORD = DWORD(FOF_FILESONLY)
+                              | DWORD(FOF_SILENT)
+                              | DWORD(FOF_WANTNUKEWARNING)
+                              | DWORD(FOFX_PREFERHARDLINK)
+                              | DWORD(FOFX_SHOWELEVATIONPROMPT)
+  try pFOp.SetOperationFlags(dwOperationFlags)
+
+  let pFOpProgress: DeployModuleMapProgressPrinter =
+      DeployModuleMapProgressPrinter()
+
+  let dwCookie: DWORD = try pFOp.Advise(pFOpProgress)
+
+  try items.forEach { item in
+    let psiSource: SwiftCOM.IShellItem
+    do {
+      psiSource = try SHCreateItemFromParsingName(item.source, nil)
+    } catch {
+      guard let hr = (error as? SwiftCOM.COMError)?.hr,
+            let dwError = WIN32_FROM_HRESULT(hr),
+            dwError == ERROR_FILE_NOT_FOUND else {
+        throw error
       }
+      print("Unable to find \(item.source)")
+      return
     }
+    defer { _ = try? psiSource.Release() }
+
+    let psiDestinationFolder: SwiftCOM.IShellItem =
+        try SHCreateItemFromParsingName(Path.dirname(item.destination), nil)
+    defer { _ = try? psiDestinationFolder.Release() }
+
+    try pFOp.CopyItem(psiSource, psiDestinationFolder,
+                      Path.basename(item.destination), nil)
   }
+
+  try pFOp.PerformOperations()
+
+  try pFOp.Unadvise(dwCookie)
 }
 
 @main
