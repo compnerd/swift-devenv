@@ -40,7 +40,7 @@ internal enum Path {
   }
 
   static func basename(_ path: String) -> String {
-    var buffer: [WCHAR] = path.wide
+    let buffer: [WCHAR] = path.wide
     return String(decodingCString: PathFindFileNameW(buffer), as: UTF16.self)
   }
 }
