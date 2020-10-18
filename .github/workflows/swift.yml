@@ -39,7 +39,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: D:\a\swift_devenv\swift_devenv\.build\x86_64-unknown-windows-msvc\debug\swift-devenv.exe
+        file: D:\a\swift-devenv\swift-devenv\.build\x86_64-unknown-windows-msvc\debug\swift-devenv.exe
         asset_name: swift-devenv.exe
         tag: ${{ github.ref }}
         overwrite: true
