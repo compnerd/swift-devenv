@@ -208,39 +208,39 @@ private func DeployModuleMaps() throws {
 
   let pFOpProgress: DeployModuleMapProgressPrinter =
       DeployModuleMapProgressPrinter()
+  try withExtendedLifetime(pFOpProgress) {
+    let dwCookie: DWORD = try pFOp.Advise($0)
+    defer { try? pFOp.Unadvise(dwCookie); }
 
-  let dwCookie: DWORD = try pFOp.Advise(pFOpProgress)
-
-  try items.forEach { item in
-    let psiSource: SwiftCOM.IShellItem
-    do {
-      psiSource = try SHCreateItemFromParsingName(item.source, nil)
-    } catch {
-      guard let hr = (error as? SwiftCOM.COMError)?.hr,
-            let dwError = WIN32_FROM_HRESULT(hr),
-            dwError == ERROR_FILE_NOT_FOUND else {
-        throw error
+    try items.forEach { item in
+      let psiSource: SwiftCOM.IShellItem
+      do {
+        psiSource = try SHCreateItemFromParsingName(item.source, nil)
+      } catch {
+        guard let hr = (error as? SwiftCOM.COMError)?.hr,
+              let dwError = WIN32_FROM_HRESULT(hr),
+              dwError == ERROR_FILE_NOT_FOUND else {
+          throw error
+        }
+        print("\(item.source) not found")
+        return
       }
-      print("Unable to find \(item.source)")
-      return
+      defer { _ = try? psiSource.Release() }
+
+      let psiDestinationFolder: SwiftCOM.IShellItem =
+          try SHCreateItemFromParsingName(Path.dirname(item.destination), nil)
+      defer { _ = try? psiDestinationFolder.Release() }
+
+      try pFOp.CopyItem(psiSource, psiDestinationFolder,
+                        Path.basename(item.destination), nil)
     }
-    defer { _ = try? psiSource.Release() }
 
-    let psiDestinationFolder: SwiftCOM.IShellItem =
-        try SHCreateItemFromParsingName(Path.dirname(item.destination), nil)
-    defer { _ = try? psiDestinationFolder.Release() }
-
-    try pFOp.CopyItem(psiSource, psiDestinationFolder,
-                      Path.basename(item.destination), nil)
+    do {
+      try pFOp.PerformOperations()
+    } catch {
+      print(error)
+    }
   }
-
-  do {
-    try pFOp.PerformOperations()
-  } catch {
-    print(error)
-  }
-
-  try pFOp.Unadvise(dwCookie)
 }
 
 @main
