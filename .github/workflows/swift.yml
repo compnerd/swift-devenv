@@ -35,5 +35,14 @@ jobs:
 
     - name: Build
       run: swift build -v
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: D:\a\swift_devenv\swift_devenv\.build\x86_64-unknown-windows-msvc\debug\swift-devenv.exe
+        asset_name: swift-devenv.exe
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: "Release swift-devenv"
     # - name: Run tests
     #  run: swift test -v
