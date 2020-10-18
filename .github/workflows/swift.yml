@@ -10,7 +10,7 @@ jobs:
   build:
 
     runs-on: windows-latest
-    if: "contains(github.event.head_commit.message, '[build]')"
+    # if: "contains(github.event.head_commit.message, '[build]')"
     steps:
     - uses: actions/checkout@v2
     - uses: seanmiddleditch/gha-setup-vsdevenv@master
@@ -36,6 +36,7 @@ jobs:
     - name: Build
       run: swift build -v
     - name: Upload binaries to release
+      if: "contains(github.event.head_commit.message, '[release]')"
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
