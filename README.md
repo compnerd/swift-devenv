@@ -8,11 +8,18 @@ Using this tool to deploy the module maps is far more convenience since it uses 
 
 ### Table of Contents
 
-- [swift devenv](#swift-devenv)
-  * [Deploying Module Maps](#deploying-module-maps)
-  * [Setting Environment Variables](#setting-environment-variables)
-  * [Identifying the Detected Windows SDK](#identifying-the-detected-windows-sdk)
-- [Development](#development)
+- [swift-devenv](#swift-devenv)
+    - [Table of Contents](#table-of-contents)
+    - [Using swift-devenv](#using-swift-devenv)
+    - [Deploying Module Maps](#deploying-module-maps)
+    - [Setting Environment Variables](#setting-environment-variables)
+        - [INCLUDE](#include)
+        - [LIB](#lib)
+    - [Identifying the Detected Windows SDK](#identifying-the-detected-windows-sdk)
+    - [Development](#development)
+        - [Build Dependencies](#build-dependencies)
+        - [Building](#building)
+        - [Installation](#installation)
 
 ### Using swift-devenv
 
@@ -110,3 +117,4 @@ Installation of `swift-devenv` simply involves copying the generated binary to y
 ```cmd
 > copy .build\x86_64-unknown-windows-msvc\*\swift-devenv.exe %DEVELOPER_DIR%\Toolchains\*\usr\bin
 ```
+
