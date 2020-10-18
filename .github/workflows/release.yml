@@ -1,16 +1,13 @@
-name: windows
+name: release
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    tags:
+      - 'v*'
 
 jobs:
   build:
-
     runs-on: windows-latest
-    # if: "contains(github.event.head_commit.message, '[build]')"
     steps:
     - uses: actions/checkout@v2
     - uses: seanmiddleditch/gha-setup-vsdevenv@master
@@ -34,7 +31,26 @@ jobs:
         copy "%SDKROOT%\usr\share\winsdk.modulemap" "%UniversalCRTSdkDir%\Include\%UCRTVersion%\um\module.modulemap"
 
     - name: Build
-      run: swift build -v
+      run: swift build -v -c release
 
-    # - name: Run tests
-    #  run: swift test -v
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: true
+        prerelease: false
+
+    - name: Upload Release Artifacts
+      id: upload_release_artifacts
+      uses: actions/upload-release-asset@1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_name: swift-devenv
+        asset_content_type: application/octet-stream
+        asset_path: .build\x86_64-unknown-windows-msvc\release\swift-devenv.exe
