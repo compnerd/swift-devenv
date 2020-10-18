@@ -234,7 +234,11 @@ private func DeployModuleMaps() throws {
                       Path.basename(item.destination), nil)
   }
 
-  try pFOp.PerformOperations()
+  do {
+    try pFOp.PerformOperations()
+  } catch {
+    print(error)
+  }
 
   try pFOp.Unadvise(dwCookie)
 }
