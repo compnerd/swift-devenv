@@ -10,7 +10,7 @@ jobs:
   build:
 
     runs-on: windows-latest
-
+    if: "contains(github.event.head.commit.message, '[build]')"
     steps:
     - uses: actions/checkout@v2
     - uses: seanmiddleditch/gha-setup-vsdevenv@master
