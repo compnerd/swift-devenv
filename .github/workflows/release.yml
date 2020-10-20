@@ -17,11 +17,11 @@ jobs:
         Install-Binary -Url "https://swift.org/builds/development/windows10/swift-DEVELOPMENT-SNAPSHOT-2020-09-22-a/swift-DEVELOPMENT-SNAPSHOT-2020-09-22-a-windows10.exe" -Name "installer.exe" -ArgumentList ("-q")
     - name: Set Environment Variables
       run: |
-        echo "::set-env name=SDKROOT::C:\Library\Developer\Platforms\Windows.platform\Developer\SDKs\Windows.sdk"
-        echo "::set-env name=DEVELOPER_DIR::C:\Library\Developer"
+        echo "SDKROOT=C:\Library\Developer\Platforms\Windows.platform\Developer\SDKs\Windows.sdk" >> $env:GITHUB_ENV
+        echo "DEVELOPER_DIR=C:\Library\Developer" >> $env:GITHUB_ENV
     - name: Adjust Paths
       run: |
-        echo "::add-path::C:\Library\Developer\Toolchains\unknown-Asserts-development.xctoolchain\usr\bin;C:\Library\Swift-development\bin;C:\Library\icu-67\usr\bin"
+        echo "C:\Library\Developer\Toolchains\unknown-Asserts-development.xctoolchain\usr\bin;C:\Library\Swift-development\bin;C:\Library\icu-67\usr\bin" >> $env:GITHUB_PATH
     - name: Install Supporting Files
       shell: cmd
       run: |
