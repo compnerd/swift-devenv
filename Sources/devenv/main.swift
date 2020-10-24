@@ -100,10 +100,9 @@ private func GetWindowsSDKVersions() throws -> [String] {
   return versions
 }
 
-/// Setup the environment for Development. This sets the `INCLUDE` and `LIB`
-/// environment variables which are used to find the SDK includes and import
-/// libraries.
-private func SetupEnvironment() throws {
+/// Get the environment variables which need to be configured to enable using the
+/// Windows SDK.  This includes environment variabels such as `INCLUDE` and `LIB`
+private func GetEnvironment() throws -> [String:String] {
   let WindowsSDKDir = try GetWindowsSDKInstallRoot()
 
   // TODO(compnerd) sort by version and choose the highest by default
@@ -118,21 +117,40 @@ private func SetupEnvironment() throws {
     Path.join(WindowsSDKDir, "Include", WindowsSDKVersion, "winrt"),
     Path.join(WindowsSDKDir, "Include", WindowsSDKVersion, "cppwinrt"),
   ]
-  try INCLUDE.joined(separator: ";").withCString(encodedAs: UTF16.self) {
-    if !SetEnvironmentVariableW("INCLUDE".wide, $0) {
-      throw Error(win32: GetLastError())
-    }
-  }
 
   let LIB: [String] = [
     Path.join(WindowsSDKDir, "Lib", WindowsSDKVersion, "ucrt", "x64"),
     Path.join(WindowsSDKDir, "Lib", WindowsSDKVersion, "um", "x64"),
   ]
-  try LIB.joined(separator: ";").withCString(encodedAs: UTF16.self) {
-    if !SetEnvironmentVariableW("LIB".wide, $0) {
-      throw Error(win32: GetLastError())
+
+  return [
+    "INCLUDE": INCLUDE.joined(separator: ";"),
+    "LIB": LIB.joined(separator: ";"),
+  ]
+}
+
+/// Print the environment variabels needed for development.
+private func PrintEnvironment() throws {
+  for (key, value) in try GetEnvironment() {
+    print("\(key)=\(value)")
+  }
+}
+
+/// Setup the environment for development. This sets the `INCLUDE` and `LIB`
+/// environment variables which are used to find the SDK includes and import
+/// libraries.
+private func SetupEnvironment() throws {
+  for (key, value) in try GetEnvironment() {
+    try key.withCString(encodedAs: UTF16.self) { lpwszKey in
+      try value.withCString(encodedAs: UTF16.self) { lpwszValue in
+        if !SetEnvironmentVariableW(lpwszKey, lpwszValue) {
+          throw Error(win32: GetLastError())
+        }
+      }
     }
   }
+
+  // TODO(compnerd) actually launch a shell that inherits the environment
 }
 
 /// Get the current value of the `SDKROOT` environment variable.
@@ -249,9 +267,10 @@ struct devenv: ParsableCommand {
       CommandConfiguration(abstract: "Configure the Development Environment for Swift on Windows")
 
   enum Operation: EnumerableFlag {
-  case setenv
   case deploy
+  case env
   case listSdks
+  case setenv
   }
 
   @Flag(help: "The operation to perform")
@@ -259,6 +278,10 @@ struct devenv: ParsableCommand {
 
   mutating func run() throws {
     switch self.operation {
+    case .deploy:
+      try DeployModuleMaps()
+    case .env:
+      try PrintEnvironment()
     case .listSdks:
       let WindowsSDKDir: String = try GetWindowsSDKInstallRoot()
       print("Detected Windows 10 SDK Dir: \(WindowsSDKDir)")
@@ -266,8 +289,6 @@ struct devenv: ParsableCommand {
       for version in try GetWindowsSDKVersions() {
         print("  - \(version)")
       }
-    case .deploy:
-      try DeployModuleMaps()
     case .setenv:
       try SetupEnvironment()
     }
