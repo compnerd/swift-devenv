@@ -33,6 +33,9 @@ jobs:
     - name: Build
       run: swift build -v -c release -Xswiftc -use-ld=lld
 
+    - name: Strip Debug Info
+      run: llvm-strip -S .build\x86_64-unknown-windows-msvc\release\swift-devenv.exe
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
