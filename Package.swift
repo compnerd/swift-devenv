@@ -9,7 +9,7 @@ let SwiftDevEnv = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-argument-parser",
-             .upToNextMinor(from: "0.3.0")),
+             .revision("8492882b030ad1c8e0bb4ca9d9ce06b07a8150b2")),
     .package(name: "SwiftCOM", url: "https://github.com/compnerd/swift-com",
              .branch("master")),
   ],

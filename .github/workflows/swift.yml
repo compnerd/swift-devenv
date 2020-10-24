@@ -15,9 +15,9 @@ jobs:
     - uses: actions/checkout@v2
     - uses: seanmiddleditch/gha-setup-vsdevenv@master
 
-    - name: Install swift-DEVELOPMENT-SNAPSHOT-2020-10-15-a
+    - name: Install swift-DEVELOPMENT-SNAPSHOT-2020-10-22-a
       run: |
-        Install-Binary -Url "https://swift.org/builds/development/windows10/swift-DEVELOPMENT-SNAPSHOT-2020-10-15-a/swift-DEVELOPMENT-SNAPSHOT-2020-10-15-a-windows10.exe" -Name "installer.exe" -ArgumentList ("-q")
+        Install-Binary -Url "https://swift.org/builds/development/windows10/swift-DEVELOPMENT-SNAPSHOT-2020-10-22-a/swift-DEVELOPMENT-SNAPSHOT-2020-10-22-a-windows10.exe" -Name "installer.exe" -ArgumentList ("-q")
     - name: Set Environment Variables
       run: |
         echo "SDKROOT=C:\Library\Developer\Platforms\Windows.platform\Developer\SDKs\Windows.sdk" >> $env:GITHUB_ENV
