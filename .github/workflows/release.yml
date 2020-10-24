@@ -31,7 +31,7 @@ jobs:
         copy "%SDKROOT%\usr\share\winsdk.modulemap" "%UniversalCRTSdkDir%\Include\%UCRTVersion%\um\module.modulemap"
 
     - name: Build
-      run: swift build -v -c release
+      run: swift build -v -c release -Xswiftc -use-ld=lld
 
     - name: Create Release
       id: create_release
