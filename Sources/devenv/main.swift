@@ -150,7 +150,22 @@ private func SetupEnvironment() throws {
     }
   }
 
-  // TODO(compnerd) actually launch a shell that inherits the environment
+  let cmdname = try Array<WCHAR>(unsafeUninitializedCapacity: Int(MAX_PATH) + 1) {
+    let dwResult: DWORD =
+        ExpandEnvironmentStringsW("%COMSPEC%".wide, $0.baseAddress,
+                                  DWORD($0.count))
+    if dwResult == 0 { throw Error(win32: GetLastError()) }
+    $1 = Int(dwResult)
+  }
+
+  let argv: [UnsafePointer<WCHAR>?] = [
+    UnsafePointer<WCHAR>(_wcsdup(cmdname)),
+    nil
+  ]
+
+  guard _wexecv(cmdname, argv) == 0 else {
+    fatalError("unable to launch shell")
+  }
 }
 
 /// Get the current value of the `SDKROOT` environment variable.
