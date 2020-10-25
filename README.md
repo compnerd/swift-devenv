@@ -64,7 +64,9 @@ The Swift compiler uses the `INCLUDE` and `LIB` environment variables to identif
 > swift devenv
 ```
 
-The default action of `devenv` is to set the environment variables as that is the most common operation.  You can explicitly specify `--setenv` if you like.
+The default action of `devenv` is to set the environment variables as that is the most common operation.
+
+**NOTE** `devenv` will launch a new shell, identified by `%COMSPEC%`.  This is required as the process cannot modify the environment of the parent process.
 
 ##### INCLUDE
 
