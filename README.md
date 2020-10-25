@@ -115,5 +115,5 @@ Detected Windows 10 SDK Versions:
 Installation of `swift-devenv` simply involves copying the generated binary to your toolchain root.
 
 ```cmd
-> copy swift-devenv.exe %DEVELOPER_DIR%\Toolchains\unknown-Asserts-development.xctoolchain\usr\bin
+> copy .build\x86_64-unknown-windows-msvc\*\swift-devenv.exe %DEVELOPER_DIR%\Toolchains\*.xctoolchain\usr\bin
 ```
